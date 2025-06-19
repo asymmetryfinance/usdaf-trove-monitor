@@ -51,7 +51,9 @@ def format_message(
         if coll_name[-3:] == "BTC"
         else f"{round(coll_amount, 2):,}"
     )
-    coll_value_str = f"(${round(coll_amount * coll_price, 2):,})"
+    coll_value_str = (
+        f"(${round(coll_amount * coll_price, 2):,})" if coll_amount > 0 else ""
+    )
     debt_amount_str = f"{round(debt_amount, 2):,}"
     interest_rate_str = f"{round(interest_rate, 2):,}%"
     txn_link_str = f"\n[TX](https://etherscan.io/tx/{txn_hash})" if txn_hash else ""

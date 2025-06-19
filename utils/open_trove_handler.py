@@ -19,6 +19,7 @@ class OpenTroveResult:
 
 
 async def handle_open_trove_event(w3, event: dict):
+    # also handles adjust trove events
     topic0 = Web3.to_hex(event["result"]["topics"][0])
     if topic0 != usdaf.topic0:  # not a TroveOperation event
         return None
@@ -37,9 +38,18 @@ async def handle_open_trove_event(w3, event: dict):
     )
 
     if (
-        _operation != 0 and _operation != 7
-    ):  # not an openTrove/openTroveAndJoinBatch operation - see ITroveEvents.sol
+        _operation != 0 and _operation != 2 and _operation != 7
+    ):  # not an openTrove/adjustTrove/openTroveAndJoinBatch operation - see ITroveEvents.sol
         return None
+
+    if _debtChangeFromOperation < 0:
+        # no USDaf minted
+        return None
+
+    # we only track collateral deposited
+    _collChangeFromOperation = (
+        0 if _collChangeFromOperation < 0 else _collChangeFromOperation
+    )
 
     # find the branch from config which this event corresponds to
     branch = next(
