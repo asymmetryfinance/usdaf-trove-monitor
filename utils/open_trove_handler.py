@@ -20,8 +20,10 @@ class OpenTroveResult:
 
 async def handle_open_trove_event(w3, event: dict):
     # also handles adjust trove events
+    print(f"[DEBUG] Event from: {event['result']['address']}")
     topic0 = Web3.to_hex(event["result"]["topics"][0])
     if topic0 != usdaf.topic0:  # not a TroveOperation event
+        print(f"[DEBUG] Wrong topic, ignoring")
         return None
 
     (
@@ -52,26 +54,33 @@ async def handle_open_trove_event(w3, event: dict):
     )
 
     # find the branch from config which this event corresponds to
+    event_address = Web3.to_checksum_address(event["result"]["address"])
     branch = next(
         (
             (k, v)
             for k, v in usdaf.branches.items()
-            if v["trove_manager"]
-            == Web3.to_checksum_address(event["result"]["address"])
+            if Web3.to_checksum_address(v["trove_manager"])
+            == event_address
         ),
         None,
     )
     if branch:
         coll_name, branch_config = branch
+        print(f"[DEBUG] ✅ Found branch: {coll_name}")
+    else:
+        # No matching branch found for this trove manager address
+        print(f"[DEBUG] Unknown address: {event_address}")
+        print(f"[DEBUG] Known addresses: {[Web3.to_checksum_address(v['trove_manager']) for v in usdaf.branches.values()]}")
+        return None
 
     # get the price of the collateral from the price feed
     price_feed = w3.eth.contract(
-        address=branch_config["price_feed"],
+        address=Web3.to_checksum_address(branch_config["price_feed"]),
         abi="""[{"inputs":[],"name":"lastGoodPrice","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]""",
     )
     coll_price: float = await price_feed.functions.lastGoodPrice().call() / PRECISION
 
-    return OpenTroveResult(
+    result = OpenTroveResult(
         coll_name=coll_name,
         coll_amount=_collChangeFromOperation / PRECISION,
         coll_price=coll_price,
@@ -79,3 +88,5 @@ async def handle_open_trove_event(w3, event: dict):
         interest_rate=_annualInterestRate / 10**16,  # convert to percentage
         txn_hash=Web3.to_hex(event["result"]["transactionHash"]),
     )
+    print(f"[DEBUG] 🚀 Sending to Discord: {coll_name} - ${result.debt_amount:.2f} USDaf")
+    return result

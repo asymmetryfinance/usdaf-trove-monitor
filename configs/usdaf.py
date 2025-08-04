@@ -1,7 +1,7 @@
 topic0 = "0x962110f281c1213763cd97a546b337b3cbfd25a31ea9723e9d8b7376ba45da1a"
 
 branches = {
-    "ysyBold": {
+    "ysyBOLD": {
         "trove_manager": "0xf8a25a2e4c863bb7cea7e4b4eeb3866bb7f11718",
         "price_feed": "0x7f575323ddedfbad449fef5459fad031fe49520b",
     },
