@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "hikari>=2.3.3",
     "python-dotenv>=1.1.0",
+    "python-telegram-bot>=22.3",
     "rich>=14.0.0",
     "web3>=7.12.0",
 ]
