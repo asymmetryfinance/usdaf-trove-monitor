@@ -44,7 +44,7 @@ async def handle_open_trove_event(w3, event: dict):
     ):  # not an openTrove/adjustTrove/openTroveAndJoinBatch operation - see ITroveEvents.sol
         return None
 
-    if _debtChangeFromOperation < 0:
+    if _debtChangeFromOperation <= 0:
         # no USDaf minted
         return None
 
